@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saans Saathi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Serif+Devanagari:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050d0e;--card:rgba(255,255,255,.035);--bd:rgba(255,255,255,.08);--tx:#eef6f5;--mu:#93a8a5;--ac:#5eead4;--ac2:#38bdf8;--band:#e67e22;
+--fb:"Manrope","Noto Sans Devanagari",system-ui,-apple-system,"Segoe UI",sans-serif;--fd:"Fraunces","Noto Serif Devanagari",Georgia,serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--fb);font-size:16px;background:var(--bg);color:var(--tx);min-height:100vh;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body:before{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(900px 520px at 8% -10%,rgba(94,234,212,.17),transparent 60%),radial-gradient(800px 520px at 100% 0,rgba(56,189,248,.16),transparent 60%),radial-gradient(900px 600px at 50% 120%,rgba(52,211,153,.09),transparent 60%)}
+body:after{content:"";position:fixed;inset:0;z-index:-1;opacity:.05;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.wrap{max-width:900px;margin:0 auto;padding:22px 16px 80px}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.logo{display:flex;align-items:center;gap:11px}
+.logo svg{width:36px;height:36px}
+h1{margin:0;font-family:var(--fd);font-size:23px;font-weight:600;letter-spacing:-.01em}
+.lang{display:flex;background:rgba(255,255,255,.05);border:1px solid var(--bd);border-radius:999px;padding:3px}
+.lang button{background:none;border:0;color:var(--mu);padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer;border-radius:999px;font-family:inherit;transition:all .2s}
+.lang button.on{background:var(--ac);color:#04201f}
+.headline{font-family:var(--fd);font-weight:600;font-size:clamp(36px,7vw,60px);line-height:1.04;letter-spacing:-.025em;margin:34px 0 12px;color:#f3fbfa}
+.headline em{font-style:italic;color:var(--ac);font-weight:500}
+html[lang=hi] .headline em{font-style:normal}
+.sub{font-size:18px;color:var(--mu);max-width:560px;margin:0 0 16px;line-height:1.55}
+.trust{display:flex;gap:20px;flex-wrap:wrap;color:var(--mu);font-size:13.5px;font-weight:600;margin:0 0 26px}
+.trust span:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ac);margin-right:8px;vertical-align:middle}
+.card{position:relative;background:var(--card);border:1px solid var(--bd);border-radius:24px;padding:22px;margin-top:14px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 44px rgba(0,0,0,.28);animation:up .55s cubic-bezier(.2,.7,.2,1) both}
+@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.lbl{font-size:11.5px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--mu);margin-bottom:13px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+#searchCard{z-index:40;overflow:visible}
+.sbox{position:relative}
+.sbox>svg{position:absolute;left:18px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--mu);pointer-events:none}
+input,select{width:100%;background:rgba(255,255,255,.04);color:var(--tx);border:1px solid var(--bd);border-radius:16px;padding:15px 16px;font-size:16px;font-family:inherit;font-weight:600;outline:none;appearance:none;-webkit-appearance:none;transition:border-color .2s,box-shadow .2s}
+#city{padding-left:48px;padding-right:62px;font-size:18px;height:60px}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%2393a8a5' stroke-width='2'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
+select option{background:#0b1a1c;color:#eef6f5}
+input:focus,select:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(94,234,212,.14)}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.locb{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:13px;border:1px solid var(--bd);background:rgba(255,255,255,.05);color:var(--tx);font-size:18px;cursor:pointer;transition:all .2s}
+.locb:hover{border-color:var(--ac);background:rgba(94,234,212,.12)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+@media(max-width:560px){.two{grid-template-columns:1fr}}
+.fl{font-size:12px;color:var(--mu);margin:0 0 7px 4px;font-weight:700;letter-spacing:.02em}
+.sug{position:absolute;left:0;right:0;top:calc(100% + 8px);background:#0c1b1d;border:1px solid var(--bd);border-radius:18px;z-index:60;overflow:hidden;display:none;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.sug div{padding:13px 18px;cursor:pointer;font-size:15.5px;font-weight:600;display:flex;justify-content:space-between;gap:12px;align-items:baseline;border-bottom:1px solid rgba(255,255,255,.05)}
+.sug div:last-child{border:0}
+.sug div:hover{background:rgba(94,234,212,.10)}
+.sug small{color:var(--mu);font-size:13px;font-weight:500;text-align:right}
+.chips{display:flex;gap:8px;margin:16px -22px 0;padding:2px 22px 4px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;background:rgba(255,255,255,.04);border:1px solid var(--bd);color:var(--tx);padding:8px 15px;border-radius:999px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s}
+.chip:hover{border-color:var(--ac);background:rgba(94,234,212,.10);transform:translateY(-1px)}
+.chip.on{background:var(--ac);color:#04201f;border-color:var(--ac)}
+.btn{width:100%;margin-top:18px;padding:17px;border:0;border-radius:16px;font-size:17px;font-weight:800;letter-spacing:.01em;color:#04201f;background:linear-gradient(100deg,#5eead4,#38bdf8);cursor:pointer;font-family:inherit;box-shadow:0 12px 36px rgba(56,189,248,.25);transition:transform .18s,box-shadow .18s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 16px 42px rgba(56,189,248,.36)}
+.btn:disabled{opacity:.65;transform:none}
+.btn2{background:rgba(255,255,255,.05);border:1px solid var(--bd);color:var(--tx);padding:11px 17px;border-radius:13px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s}
+.btn2:hover{border-color:var(--ac);background:rgba(94,234,212,.09)}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.note{color:var(--mu);font-size:13px;margin-top:12px;line-height:1.55}
+.hero{overflow:hidden;padding:28px 24px 24px;background:radial-gradient(520px 260px at 12% 0,color-mix(in srgb,var(--band) 26%,transparent),transparent 70%),var(--card);border-color:color-mix(in srgb,var(--band) 38%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--band) 12%,transparent),0 24px 70px color-mix(in srgb,var(--band) 16%,transparent)}
+#haze{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.hrow,.tiles{position:relative;z-index:1}
+.hrow{display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+.ring{position:relative;width:200px;height:200px;flex:none;margin:0 auto}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg);filter:drop-shadow(0 0 14px color-mix(in srgb,var(--band) 55%,transparent))}
+.ring .n{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .n b{font-family:var(--fd);font-size:66px;font-weight:600;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.ring .n span{font-size:11px;color:var(--mu);letter-spacing:.14em;margin-top:6px;font-weight:800}
+.hinfo{flex:1;min-width:220px}
+.live{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--mu);margin-bottom:8px}
+.live i{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 9px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.cname{font-family:var(--fd);font-size:clamp(32px,6vw,44px);font-weight:600;letter-spacing:-.02em;margin:0;line-height:1.05}
+.pill{display:inline-block;margin-top:12px;padding:8px 18px;border-radius:999px;font-weight:800;font-size:14px;color:#fff;background:var(--band);box-shadow:0 8px 24px color-mix(in srgb,var(--band) 40%,transparent)}
+.tiles{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:12px;margin-top:22px}
+@media(max-width:620px){.tiles{grid-template-columns:1fr}}
+.tile{background:rgba(3,10,11,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid var(--bd);border-radius:18px;padding:16px}
+.tile small{display:block;color:var(--mu);font-size:11px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;margin-bottom:8px}
+.tile b{font-size:17.5px;line-height:1.35;display:block;font-weight:700}
+.tile.big b{font-family:var(--fd);font-size:32px;font-weight:600;line-height:1.1}
+.meter{height:6px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:12px}
+.meter i{display:block;height:100%;border-radius:99px;background:var(--band);transition:width .8s cubic-bezier(.2,.7,.2,1)}
+.warn{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.4);border-radius:14px;padding:12px 14px;margin-top:14px;font-size:14px;line-height:1.5}
+.tag{font-size:11.5px;border:1px solid var(--bd);border-radius:999px;padding:3px 11px;text-transform:none;letter-spacing:0;color:var(--tx);background:rgba(255,255,255,.05);font-weight:700}
+.adv{white-space:pre-line;font-size:17.5px;line-height:1.75}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:720px){.g2{grid-template-columns:1fr}}
+.kv{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:15px}
+.kv:last-of-type{border:0}
+.kv span:first-child{color:var(--mu);font-weight:600}
+.kv b{text-align:right;font-weight:800}
+.fcr{display:grid;grid-template-columns:90px 1fr auto;gap:14px;align-items:center;padding:9px 0;font-size:15px;font-weight:600}
+.fcr .t{height:10px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+.fcr .t i{display:block;height:100%;border-radius:99px}
+.sch{background:rgba(3,10,11,.5);border:1px solid var(--bd);border-radius:16px;padding:16px 18px;margin-top:12px;font-size:16px;line-height:1.7}
+.bar{display:grid;grid-template-columns:96px 1fr 44px;gap:12px;align-items:center;margin-top:12px;font-size:14.5px;font-weight:700}
+.bar .t{height:12px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+.bar .t i{display:block;height:100%;border-radius:99px}
+.hide{display:none}
+.err{color:#fca5a5}
+.spin{opacity:.7}
+.awsgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:14px}
+.awsi{display:flex;gap:12px;align-items:flex-start;padding:13px 14px;border-radius:14px;background:rgba(255,255,255,.025);border:1px solid var(--bd);cursor:default;user-select:none;-webkit-user-select:none}
+.awsi i{flex:none;width:9px;height:9px;border-radius:50%;margin-top:6px;background:linear-gradient(135deg,#5eead4,#38bdf8)}
+.awsi b{display:block;font-size:14.5px;font-weight:800}
+.awsi span{display:block;font-size:12.5px;color:var(--mu);margin-top:2px;line-height:1.4;font-weight:500}
+summary::-webkit-details-marker{display:none}
+footer{color:var(--mu);font-size:12.5px;text-align:center;margin-top:34px;line-height:1.7}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="12" fill="url(#g)"/><path d="M9 15h15a4 4 0 1 0-4-4M9 21h21a4 4 0 1 1-4 4M9 27h11" stroke="#04201f" stroke-width="2.6" stroke-linecap="round"/><defs><linearGradient id="g" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#5eead4"/><stop offset="1" stop-color="#38bdf8"/></linearGradient></defs></svg>
+    <h1>Saans Saathi</h1>
+  </div>
+  <div class="lang"><button id="bEn" class="on">EN</button><button id="bHi">हिं</button></div>
+</header>
+<h2 class="headline" id="headline"></h2>
+<p class="sub" id="sub"></p>
+<div class="trust"><span id="tr1"></span><span id="tr2"></span><span id="tr3"></span></div>
+
+<section class="card" id="searchCard">
+  <div class="sbox">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input id="city" autocomplete="off" value="Delhi" placeholder="Search any city or town in India">
+    <button class="locb" id="loc" title="Use my location">📍</button>
+    <div class="sug" id="sug"></div>
+  </div>
+  <div class="note" id="locNote" style="margin:8px 4px 0"></div>
+  <div class="two">
+    <div><div class="fl" id="lRole"></div><select id="role"></select></div>
+    <div><div class="fl" id="lHealth"></div><select id="health"></select></div>
+  </div>
+  <div class="chips" id="chips"></div>
+  <button class="btn" id="go"></button>
+</section>
+
+<div id="out" class="hide">
+  <section class="card hero" id="hero">
+    <canvas id="haze"></canvas>
+    <div class="hrow">
+      <div class="ring">
+        <svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="84" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="14"/><circle id="arc" cx="100" cy="100" r="84" fill="none" stroke="var(--band)" stroke-width="14" stroke-linecap="round" stroke-dasharray="528" stroke-dashoffset="528" style="transition:stroke-dashoffset .9s ease"/></svg>
+        <div class="n"><b id="aqi"></b><span>US AQI</span></div>
+      </div>
+      <div class="hinfo">
+        <div class="live"><i></i><span id="liveT"></span></div>
+        <div class="lbl" id="lAqi" style="margin-bottom:6px"></div>
+        <h2 class="cname" id="cityName"></h2>
+        <span class="pill" id="band"></span>
+        <div id="spike"></div>
+      </div>
+    </div>
+    <div class="tiles">
+      <div class="tile big"><small id="lSafe"></small><b id="safeTime"></b><div class="meter"><i id="safeBar"></i></div></div>
+      <div class="tile"><small id="kMask"></small><b id="mask"></b></div>
+      <div class="tile"><small id="kBest"></small><b id="best"></b></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="lbl"><span id="lAdv"></span><span class="tag" id="src"></span></div>
+    <div class="adv" id="adv"></div>
+    <div class="acts">
+      <button class="btn2" id="speak"></button>
+      <button class="btn2" id="share"></button>
+    </div>
+    <div class="note" id="advNote"></div>
+  </section>
+
+  <div class="g2">
+    <section class="card">
+      <div class="lbl" id="lPoll"></div>
+      <div class="kv"><span>PM2.5</span><b id="pm25"></b></div>
+      <div class="kv"><span>PM10</span><b id="pm10"></b></div>
+      <div class="kv"><span id="kCpcb"></span><b id="cpcb"></b></div>
+      <div class="kv"><span>GRAP</span><b id="grap"></b></div>
+      <div class="note" id="grapNote"></div>
+    </section>
+    <section class="card">
+      <div class="lbl" id="lFc"></div>
+      <div id="fc"></div>
+      <div class="note" id="trend"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="lbl" id="lSchool"></div>
+    <div class="kv" style="border:0;padding-bottom:0"><span id="kSch"></span><b id="schDec"></b></div>
+    <div class="sch" id="schMsg"></div>
+    <div class="note" id="schNote"></div>
+  </section>
+</div>
+
+<section class="card">
+  <div class="lbl" id="lBoard"></div>
+  <button class="btn2" id="boardBtn"></button>
+  <div id="board"></div>
+</section>
+
+<section class="card">
+  <div class="lbl" id="lTg"></div>
+  <div class="adv" style="font-size:16px" id="tgText"></div>
+  <a class="btn" id="tgBtn" href="https://t.me/SaansSaathi_bot" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none"></a>
+</section>
+
+<section class="card">
+  <details id="awsDet">
+    <summary class="lbl" style="cursor:pointer;margin:0;list-style:none"><span id="lAws"></span><span style="margin-left:auto;font-size:15px">▾</span></summary>
+    <div class="note" style="margin-top:12px;font-size:14.5px" id="awsText"></div>
+    <div class="awsgrid" id="awsGrid"></div>
+  </details>
+</section>
+
+<footer id="foot"></footer>
+</div>
+
+<script>
+const API="https://9p18wspqok.execute-api.ap-south-1.amazonaws.com/check";
+let lang="en";
+const T={
+en:{sub:"Live air quality and health advice for people who work outdoors",city:"City",role:"Who are you",health:"Health condition",go:"Get health advice",loc:"📍 Use my location",locOk:"Nearest city: ",locNo:"Location not available",
+aqi:"Current AQI (US scale)",poll:"Pollutants and GRAP",cpcb:"CPCB AQI (approx.)",safe:"How long can you stay outside?",mask:"Mask",best:"Best time outside",adv:"Health advice",
+fc:"Coming days",tomorrow:"Tomorrow",dayafter:"Day after",school:"School Mode (for teachers and parents)",kSch:"Suggested decision",board:"Live AQI board: big cities",boardBtn:"Show live board",
+headline:"Know your air <em>before you step out.</em>",tr1:"Any city in India",tr2:"Hindi and English",tr3:"Free, no sign-up",aws:[["AWS Amplify","Hosts this website"],["API Gateway","Public front door for every request"],["Lambda","Air checks, Telegram bot and alerts"],["DynamoDB","Saves checks, preferences and feedback"],["EventBridge","Hourly and 7:30 AM schedules"],["SNS","School alert emails"],["Polly","Voice replies in Telegram"]],live:"Live data, just now",lTg:"Also on Telegram",tgText:"Chat with the bot: send any city or your location, get advice, a voice note, a tomorrow warning and hourly alerts for your city.",tgBtn:"Open @SaansSaathi_bot",lAws:"Built on AWS",awsText:"Every check runs through API Gateway and Lambda, is logged in DynamoDB, and school alerts run hourly with EventBridge and SNS. The Telegram bot talks in voice with Amazon Polly.",speak:"🔊 Listen",stop:"⏹ Stop",share:"Share on WhatsApp",loading:"Checking air...",noCity:"City not found. Try another name.",fail:"Could not reach server. Please try again.",
+bands:["Good","Moderate","Unhealthy for sensitive","Unhealthy","Very unhealthy","Hazardous"],
+spike:"PM10 is extremely high. This may be a dust spike or a bad sensor reading. Be careful, but double-check with another source.",
+trendS:"Air will be about the same tomorrow.",trendW:"Warning: air will get worse tomorrow. Plan outdoor work early.",trendB:"Good news: air should improve tomorrow.",
+rule:"Rule-based",ai:"AI, Amazon Bedrock",advNoteR:"General guidance based on today's AQI and your health condition. Not medical advice.",advNoteA:"AI generated guidance. Not medical advice.",
+grapNote:"Approximate: uses the current hourly reading. Official GRAP uses the 24-hour average CPCB AQI.",
+unlimited:"No limit",min:"min",hr:"hr",
+masks:{none:"Not needed",surg:"Cloth/surgical mask is okay",n95:"N95 mask",n95s:"N95, fitted well"},
+bestT:{good:"Any time",mid:"Afternoon (12 to 4 pm)",bad:"Afternoon only, keep it short",vbad:"Avoid going out"},
+schD:{a:"Normal day",b:"Cut down heavy outdoor sports",c:"Move PE and assembly indoors",d:"Keep children indoors"},
+schM:{a:"Air is fine. All outdoor activities can go on as usual.",b:"Dear parents: air is a little unhealthy. Children with asthma should avoid long outdoor games today.",c:"Dear parents: air is unhealthy today. Outdoor sports and assembly are moved indoors. Please send a mask with children who have breathing problems.",d:"Dear parents: air is very unhealthy today. Children will stay indoors. Please send an N95 mask if your child must travel."},
+schNote:"This is a suggestion, not an official government order. Follow your state and school rules.",
+shareT:(c,a,b)=>`Air in ${c} right now: AQI ${a} (${b}). Check your own advice on Saans Saathi: `,
+foot:(b)=>`Live data: Open-Meteo${b?". AI advice: Amazon Bedrock":""}. Advisory only, not an official government order.`,
+roles:["General","Delivery rider","Street vendor","School teacher","Parent","Traffic police","Construction worker"],
+healths:["Normal","Asthma / breathing problem","Elderly","Child","Pregnant"]},
+hi:{sub:"बाहर काम करने वालों के लिए लाइव हवा की जानकारी और सेहत की सलाह",city:"शहर",role:"आप कौन हैं",health:"सेहत की स्थिति",go:"सलाह लें",loc:"📍 मेरी लोकेशन",locOk:"सबसे पास का शहर: ",locNo:"लोकेशन नहीं मिली",
+aqi:"अभी का AQI (US स्केल)",poll:"प्रदूषक और GRAP",cpcb:"CPCB AQI (अंदाज़न)",safe:"बाहर कितनी देर रह सकते हैं?",mask:"मास्क",best:"बाहर जाने का सही समय",adv:"सेहत की सलाह",
+fc:"आने वाले दिन",tomorrow:"कल",dayafter:"परसों",school:"स्कूल मोड (शिक्षक और अभिभावक के लिए)",kSch:"सुझाया गया फैसला",board:"लाइव AQI बोर्ड: बड़े शहर",boardBtn:"लाइव बोर्ड देखें",
+headline:"बाहर निकलने से पहले <em>हवा जानें।</em>",tr1:"भारत का कोई भी शहर",tr2:"हिंदी और English",tr3:"मुफ़्त, साइन-अप नहीं",aws:[["AWS Amplify","यह वेबसाइट होस्ट करता है"],["API Gateway","हर रिक्वेस्ट का सार्वजनिक दरवाज़ा"],["Lambda","हवा की जाँच, Telegram बॉट और अलर्ट"],["DynamoDB","जाँच, पसंद और फीडबैक सहेजता है"],["EventBridge","हर घंटे और सुबह 7:30 के शेड्यूल"],["SNS","स्कूल अलर्ट ईमेल"],["Polly","Telegram में आवाज़ वाले जवाब"]],live:"लाइव डेटा, अभी",lTg:"Telegram पर भी",tgText:"बॉट से बात करें: कोई भी शहर या अपनी लोकेशन भेजें, सलाह, आवाज़ वाला संदेश, कल की चेतावनी और अपने शहर के घंटे-घंटे के अलर्ट पाएँ।",tgBtn:"@SaansSaathi_bot खोलें",lAws:"AWS पर बना",awsText:"हर जाँच API Gateway और Lambda से गुज़रती है, DynamoDB में दर्ज होती है, और स्कूल अलर्ट EventBridge और SNS से हर घंटे चलते हैं। Telegram बॉट Amazon Polly से आवाज़ में बोलता है।",speak:"🔊 सुनें",stop:"⏹ रोकें",share:"WhatsApp पर भेजें",loading:"हवा चेक हो रही है...",noCity:"शहर नहीं मिला। दूसरा नाम आज़माएं।",fail:"सर्वर नहीं मिला। फिर कोशिश करें।",
+bands:["अच्छी","सामान्य","संवेदनशील लोगों के लिए खराब","खराब","बहुत खराब","खतरनाक"],
+spike:"PM10 बहुत ज़्यादा है। यह धूल का उछाल या गलत रीडिंग हो सकती है। सावधान रहें और दूसरी जगह भी जाँच लें।",
+trendS:"कल हवा लगभग ऐसी ही रहेगी।",trendW:"चेतावनी: कल हवा और खराब होगी। बाहर का काम सुबह जल्दी निपटा लें।",trendB:"अच्छी खबर: कल हवा बेहतर हो सकती है।",
+rule:"नियम आधारित",ai:"AI, Amazon Bedrock",advNoteR:"आज के AQI और आपकी सेहत के हिसाब से सामान्य सलाह। यह डॉक्टर की सलाह नहीं है।",advNoteA:"AI से बनी सलाह। यह डॉक्टर की सलाह नहीं है।",
+grapNote:"अंदाज़न: अभी की घंटे की रीडिंग से। असली GRAP 24 घंटे के औसत CPCB AQI पर चलता है।",
+unlimited:"कोई सीमा नहीं",min:"मिनट",hr:"घंटे",
+masks:{none:"ज़रूरत नहीं",surg:"कपड़े या सर्जिकल मास्क चलेगा",n95:"N95 मास्क",n95s:"N95, ठीक से फिट करके"},
+bestT:{good:"कभी भी",mid:"दोपहर (12 से 4 बजे)",bad:"सिर्फ दोपहर, कम समय के लिए",vbad:"बाहर जाने से बचें"},
+schD:{a:"सामान्य दिन",b:"भारी आउटडोर खेल कम करें",c:"PE और असेंबली अंदर करें",d:"बच्चों को अंदर रखें"},
+schM:{a:"हवा ठीक है। बाहर की सभी गतिविधियाँ सामान्य चल सकती हैं।",b:"प्रिय अभिभावक: हवा थोड़ी खराब है। अस्थमा वाले बच्चे आज लंबे बाहरी खेल से बचें।",c:"प्रिय अभिभावक: आज हवा खराब है। बाहरी खेल और असेंबली अंदर होंगे। साँस की दिक्कत वाले बच्चों को मास्क के साथ भेजें।",d:"प्रिय अभिभावक: आज हवा बहुत खराब है। बच्चे अंदर रहेंगे। बच्चे को आना ही पड़े तो N95 मास्क दें।"},
+schNote:"यह सुझाव है, सरकारी आदेश नहीं। अपने राज्य और स्कूल के नियम मानें।",
+shareT:(c,a,b)=>`${c} में अभी हवा: AQI ${a} (${b})। अपनी सलाह Saans Saathi पर देखें: `,
+foot:(b)=>`लाइव डेटा: Open-Meteo${b?"। AI सलाह: Amazon Bedrock":""}। यह सिर्फ सलाह है, सरकारी आदेश नहीं।`,
+roles:["General","Delivery rider","Street vendor","School teacher","Parent","Traffic police","Construction worker"],
+healths:["Normal","Asthma / breathing problem","Elderly","Child","Pregnant"]}
+};
+const ROLE_HI=["आम व्यक्ति","डिलीवरी राइडर","स्ट्रीट वेंडर","स्कूल शिक्षक","अभिभावक","ट्रैफिक पुलिस","निर्माण मज़दूर"];
+const ROLE_EN=["General","Delivery rider","Street vendor","School teacher","Parent","Traffic police","Construction worker"];
+const HEALTH_HI=["सामान्य","अस्थमा / साँस की दिक्कत","बुज़ुर्ग","बच्चा","गर्भवती"];
+const HEALTH_EN=["Normal","Asthma / breathing problem","Elderly","Child","Pregnant"];
+const CITIES=[["Delhi",28.61,77.21],["Mumbai",19.08,72.88],["Kolkata",22.57,88.36],["Chennai",13.08,80.27],["Bengaluru",12.97,77.59],["Hyderabad",17.39,78.49],["Pune",18.52,73.86],["Ahmedabad",23.02,72.57],["Jaipur",26.91,75.79],["Lucknow",26.85,80.95],["Kanpur",26.45,80.33],["Noida",28.54,77.39],["Gurugram",28.46,77.03],["Ghaziabad",28.67,77.45],["Patna",25.59,85.14],["Bhopal",23.26,77.41],["Indore",22.72,75.86],["Nagpur",21.15,79.09],["Chandigarh",30.73,76.78],["Ludhiana",30.9,75.86],["Amritsar",31.63,74.87],["Varanasi",25.32,83.0],["Agra",27.18,78.02],["Prayagraj",25.43,81.85],["Ranchi",23.34,85.31],["Guwahati",26.14,91.74],["Surat",21.17,72.83],["Visakhapatnam",17.69,83.22],["Kochi",9.93,76.27],["Dehradun",30.32,78.03]];
+const BOARD=["Delhi","Mumbai","Kolkata","Chennai","Bengaluru","Hyderabad","Lucknow","Patna"];
+const $=id=>document.getElementById(id);
+const COL=["#2ecc71","#f1c40f","#e67e22","#e74c3c","#a569bd","#8e2b3f"];
+
+const REDUCED=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+function countUp(el,to){
+  if(REDUCED){el.textContent=to;return}
+  const t0=performance.now(),d=800;
+  (function f(n){const k=Math.min(1,(n-t0)/d),e=1-Math.pow(1-k,3);el.textContent=Math.round(to*e);if(k<1)requestAnimationFrame(f)})(t0);
+}
+// drifting dust: more particles when the air is worse
+let hazeRaf=0;
+function haze(aqi,col){
+  const cv=$("haze"),h=$("hero");cancelAnimationFrame(hazeRaf);
+  const w=cv.width=h.offsetWidth,ht=cv.height=h.offsetHeight,ctx=cv.getContext("2d");
+  const n=Math.round(Math.min(130,Math.max(10,aqi/2.6)));
+  const ps=Array.from({length:n},()=>({x:Math.random()*w,y:Math.random()*ht,r:Math.random()*2.2+.6,vx:(Math.random()-.3)*.35,vy:(Math.random()-.5)*.18,a:Math.random()*.4+.15}));
+  function draw(){
+    ctx.clearRect(0,0,w,ht);ctx.fillStyle=col;
+    for(const p of ps){ctx.globalAlpha=p.a;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.283);ctx.fill();
+      if(!REDUCED){p.x+=p.vx;p.y+=p.vy;if(p.x>w+4)p.x=-4;if(p.x<-4)p.x=w+4;if(p.y>ht+4)p.y=-4;if(p.y<-4)p.y=ht+4}}
+    ctx.globalAlpha=1;
+    if(!REDUCED)hazeRaf=requestAnimationFrame(draw);
+  }
+  draw();
+}
+function bandIdx(a){return a<=50?0:a<=100?1:a<=150?2:a<=200?3:a<=300?4:5}
+let last=null, speaking=false;
+
+function fillSelects(){
+  const t=T[lang];const rs=lang==="hi"?ROLE_HI:ROLE_EN, hs=lang==="hi"?HEALTH_HI:HEALTH_EN;
+  const rv=$("role").selectedIndex, hv=$("health").selectedIndex;
+  $("role").innerHTML=rs.map((x,i)=>`<option value="${ROLE_EN[i]}">${x}</option>`).join("");
+  $("health").innerHTML=hs.map((x,i)=>`<option value="${HEALTH_EN[i]}">${x}</option>`).join("");
+  $("role").selectedIndex=Math.max(rv,0);$("health").selectedIndex=Math.max(hv,0);
+}
+function applyLang(){
+  const t=T[lang];document.documentElement.lang=lang;
+  $("sub").textContent=t.sub;$("lRole").textContent=t.role;$("city").placeholder=lang==="hi"?"भारत का कोई भी शहर या कस्बा खोजें":"Search any city or town in India";$("lHealth").textContent=t.health;
+  $("go").textContent=t.go;$("loc").title=t.loc;$("lAqi").textContent=t.aqi;$("lPoll").textContent=t.poll;$("kCpcb").textContent=t.cpcb;
+  $("lSafe").textContent=t.safe;$("kMask").textContent=t.mask;$("kBest").textContent=t.best;$("lAdv").textContent=t.adv;$("lFc").textContent=t.fc;
+  $("lSchool").textContent=t.school;$("kSch").textContent=t.kSch;$("lBoard").textContent=t.board;$("boardBtn").textContent=t.boardBtn;
+  $("speak").textContent=speaking?t.stop:t.speak;$("share").textContent=t.share;$("grapNote").textContent=t.grapNote;$("lTg").textContent=t.lTg;$("headline").innerHTML=t.headline;$("tr1").textContent=t.tr1;$("tr2").textContent=t.tr2;$("tr3").textContent=t.tr3;$("awsGrid").innerHTML=t.aws.map(a=>`<div class="awsi"><i></i><div><b>${a[0]}</b><span>${a[1]}</span></div></div>`).join("");$("tgText").textContent=t.tgText;$("tgBtn").textContent=t.tgBtn;$("lAws").textContent=t.lAws;$("awsText").textContent=t.awsText;$("schNote").textContent=t.schNote;
+  $("bEn").classList.toggle("on",lang==="en");$("bHi").classList.toggle("on",lang==="hi");
+  fillSelects();$("foot").textContent=t.foot(last&&last.advice_source==="bedrock");
+  if(last)render(last);
+}
+$("bEn").onclick=()=>{if(lang==="en")return;stopVoice();lang="en";applyLang();if(last)check(true)};
+$("bHi").onclick=()=>{if(lang==="hi")return;stopVoice();lang="hi";applyLang();if(last)check(true)};
+
+function renderChips(){
+  $("chips").innerHTML=CITIES.slice(0,16).map(c=>`<button class="chip" data-c="${c[0]}">${c[0]}</button>`).join("");
+  $("chips").onclick=e=>{const c=e.target.dataset.c;if(c){$("city").value=c;check()}};
+}
+
+// autocomplete: any Indian city/town via Open-Meteo geocoding, deduped and ranked
+let st=null, picked=null;
+const norm=x=>(x||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+$("city").addEventListener("input",()=>{
+  picked=null;clearTimeout(st);const q=$("city").value.trim();
+  if(q.length<2){$("sug").style.display="none";return}
+  st=setTimeout(async()=>{
+    try{
+      const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=25&language=en&countryCode=IN`);
+      const j=await r.json();let res=(j.results||[]);
+      res.sort((a,b)=>(b.population||0)-(a.population||0));
+      const seen=new Set(),out=[];
+      for(const x of res){
+        const k=norm(x.name)+"|"+norm(x.admin1);
+        if(seen.has(k))continue;seen.add(k);out.push(x);
+        if(out.length>=6)break;
+      }
+      if(!out.length){$("sug").style.display="none";return}
+      window._sug=out;
+      $("sug").innerHTML=out.map((x,i)=>`<div data-i="${i}"><span>${x.name}</span><small>${[x.admin2,x.admin1].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(", ")}</small></div>`).join("");
+      $("sug").style.display="block";
+    }catch(e){$("sug").style.display="none"}
+  },250);
+});
+$("sug").onclick=e=>{const d=e.target.closest("div[data-i]");if(d){const x=window._sug[+d.dataset.i];$("city").value=x.name;picked={lat:x.latitude,lon:x.longitude,name:x.name};$("sug").style.display="none";check()}};
+document.addEventListener("click",e=>{if(!e.target.closest(".srch"))$("sug").style.display="none"});
+$("city").addEventListener("keydown",e=>{if(e.key==="Enter"){$("sug").style.display="none";check()}});
+
+$("loc").onclick=()=>{
+  const t=T[lang];
+  if(!navigator.geolocation){$("locNote").textContent=t.locNo;return}
+  navigator.geolocation.getCurrentPosition(p=>{
+    let best=null,bd=1e9;
+    for(const c of CITIES){const d=(c[1]-p.coords.latitude)**2+(c[2]-p.coords.longitude)**2;if(d<bd){bd=d;best=c[0]}}
+    $("city").value=best;picked=null;$("locNote").textContent=t.locOk+best;check();
+  },()=>{$("locNote").textContent=t.locNo},{timeout:8000});
+};
+
+async function api(city){
+  const ll=(picked&&picked.name===city)?`&lat=${picked.lat}&lon=${picked.lon}`:"";
+  const u=`${API}?city=${encodeURIComponent(city)}${ll}&role=${encodeURIComponent($("role").value)}&health=${encodeURIComponent($("health").value)}&lang=${lang}`;
+  const r=await fetch(u);const j=await r.json().catch(()=>({}));
+  if(!r.ok){const e=new Error(j.error||"fail");e.status=r.status;throw e}
+  return j;
+}
+async function check(quiet){
+  const t=T[lang];const city=$("city").value.trim();if(!city)return;
+  $("go").disabled=true;$("go").textContent=t.loading;
+  try{
+    const j=await api(city);last=j;render(j);$("out").classList.remove("hide");
+    if(!quiet)$("out").scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){
+    alert(e.status===404?t.noCity:t.fail);
+  }finally{$("go").disabled=false;$("go").textContent=t.go}
+}
+$("go").onclick=()=>check();
+
+function safeInfo(aqi,health){
+  const sens=health!=="Normal";const t=T[lang];
+  let mins;
+  if(aqi<=50)mins=null;
+  else if(aqi<=100)mins=sens?240:null;
+  else if(aqi<=150)mins=sens?90:240;
+  else if(aqi<=200)mins=sens?45:120;
+  else if(aqi<=300)mins=sens?20:60;
+  else mins=sens?0:30;
+  let txt;
+  if(mins===null)txt=t.unlimited;
+  else if(mins===0)txt="0 "+t.min;
+  else if(mins>=60)txt=(mins/60)+" "+t.hr;
+  else txt=mins+" "+t.min;
+  const pct=mins===null?100:Math.round(Math.min(mins,240)/240*100);
+  const mk=aqi<=50?t.masks.none:aqi<=100?(sens?t.masks.n95:t.masks.surg):aqi<=200?t.masks.n95:t.masks.n95s;
+  const bt=aqi<=100?t.bestT.good:aqi<=150?t.bestT.mid:aqi<=300?t.bestT.bad:t.bestT.vbad;
+  return{txt,pct,mk,bt};
+}
+function render(j){
+  const t=T[lang];const i=bandIdx(j.aqi);const col=COL[i];
+  $("cityName").textContent=j.city;
+  document.getElementById("hero").style.setProperty("--band",col);$("liveT").textContent=t.live;countUp($("aqi"),j.aqi);haze(j.aqi,col);document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on",c.textContent===j.city));
+  $("arc").style.strokeDashoffset=528-528*Math.min(j.aqi,300)/300;
+  $("band").textContent=t.bands[i];
+  $("pm25").textContent=Math.round(j.pm25)+" µg/m³";$("pm10").textContent=(Math.round(j.pm10*10)/10)+" µg/m³";
+  $("cpcb").textContent=j.cpcb_aqi_approx;$("grap").textContent=j.grap_stage;
+  $("spike").innerHTML=j.pm10>600?`<div class="warn">⚠️ ${t.spike}</div>`:"";
+  const s=safeInfo(j.aqi,j.health||$("health").value);
+  $("safeTime").textContent=s.txt;$("safeBar").style.width=s.pct+"%";
+  $("mask").textContent=s.mk;$("best").textContent=s.bt;
+  const isAI=j.advice_source==="bedrock";
+  $("src").textContent=isAI?t.ai:t.rule;$("adv").textContent=j.advice;$("advNote").textContent=isAI?t.advNoteA:t.advNoteR;
+  const fc=(j.forecast||[]);const names=[t.tomorrow,t.dayafter];
+  $("fc").innerHTML=fc.slice(0,2).map((f,k)=>{const b=bandIdx(f.max_aqi);return `<div class="fcr"><span>${names[k]}</span><div class="t"><i style="width:${Math.min(f.max_aqi,300)/3}%;background:${COL[b]}"></i></div><b>${f.max_aqi}</b></div>`}).join("");
+  $("trend").textContent=j.trend==="worse"?t.trendW:j.trend==="better"?t.trendB:t.trendS;
+  const sc=j.aqi<=100?"a":j.aqi<=150?"b":j.aqi<=200?"c":"d";
+  $("schDec").textContent=t.schD[sc];$("schMsg").textContent=t.schM[sc];
+  $("foot").textContent=t.foot(isAI);
+}
+
+// voice: browser speech (Hindi if available). Polly can replace this later.
+let voiceRun=0,curAudio=null;
+const FEM=/female|lekha|veena|heera|kalpana|swara|neerja|priya|samantha|karen|zira|google (हिन्दी|hindi|uk english female)/i;
+function pickVoice(code){
+  const vs=speechSynthesis.getVoices()||[];const pre=code.slice(0,2).toLowerCase();
+  const same=vs.filter(v=>v.lang.toLowerCase().replace("_","-").startsWith(pre));
+  return same.find(v=>FEM.test(v.name))||same.find(v=>v.lang.replace("_","-")===code)||same[0]||null;
+}
+function resetVoice(){speaking=false;$("speak").textContent=T[lang].speak;$("speak").disabled=false}
+function stopVoice(){voiceRun++;try{speechSynthesis.cancel()}catch(e){}if(curAudio){curAudio.pause();curAudio=null}resetVoice()}
+function speakBrowser(lines,code,run){
+  if(!window.speechSynthesis){resetVoice();return}
+  speechSynthesis.cancel();const voice=pickVoice(code);
+  $("speak").textContent=T[lang].stop;$("speak").disabled=false;
+  const reset=()=>{if(run===voiceRun)resetVoice()};
+  lines.forEach((txt,i)=>{
+    const u=new SpeechSynthesisUtterance(txt);u.lang=code;if(voice)u.voice=voice;u.rate=.88;u.pitch=1.1;
+    if(i===lines.length-1){u.onend=reset}u.onerror=reset;speechSynthesis.speak(u);
+  });
+}
+$("speak").onclick=async()=>{
+  const t=T[lang];if(!last)return;
+  if(speaking){stopVoice();return}
+  const b=bandIdx(last.aqi);
+  const clean=(last.advice||"").split("\n").map(l=>l.replace(/^\s*\d+\)\s*/,"").trim()).filter(Boolean);
+  const intro=lang==="hi"
+    ?[`${last.city}।`,`ए क्यू आई, ${last.aqi}।`,`हवा ${t.bands[b]} है।`]
+    :[`${last.city}.`,`A Q I, ${last.aqi}.`,`Air quality is ${t.bands[b]}.`];
+  const lines=intro.concat(clean);const code=lang==="hi"?"hi-IN":"en-IN";
+  const run=++voiceRun;speaking=true;$("speak").disabled=true;$("speak").textContent="…";
+  try{
+    // female voice from Amazon Polly (Kajal) through our own API
+    const r=await fetch(`${API}?tts=1&lang=${lang}&text=${encodeURIComponent(lines.join("|"))}`);
+    if(!r.ok)throw new Error("tts "+r.status);
+    const j=await r.json();if(run!==voiceRun)return;
+    const a=new Audio("data:"+j.mime+";base64,"+j.audio);a.playbackRate=1.08;curAudio=a;
+    a.onended=()=>{if(run===voiceRun){curAudio=null;resetVoice()}};
+    a.onerror=()=>{if(run===voiceRun){curAudio=null;speakBrowser(lines,code,run)}};
+    await a.play();
+    if(run===voiceRun){$("speak").textContent=t.stop;$("speak").disabled=false}
+  }catch(e){
+    if(run===voiceRun)speakBrowser(lines,code,run);
+  }
+};
+$("share").onclick=()=>{
+  if(!last)return;const t=T[lang];
+  const txt=t.shareT(last.city,last.aqi,t.bands[bandIdx(last.aqi)])+location.origin+location.pathname+"?city="+encodeURIComponent(last.city);
+  window.open("https://wa.me/?text="+encodeURIComponent(txt),"_blank");
+};
+
+$("boardBtn").onclick=async()=>{
+  const t=T[lang];$("boardBtn").disabled=true;$("board").innerHTML=`<div class="note spin">${t.loading}</div>`;
+  const rs=await Promise.all(BOARD.map(c=>api(c).then(j=>({c,a:j.aqi})).catch(()=>null)));
+  const ok=rs.filter(Boolean).sort((a,b)=>b.a-a.a);
+  $("board").innerHTML=ok.map(x=>{const b=bandIdx(x.a);return `<div class="bar"><span>${x.c}</span><div class="t"><i style="width:${Math.min(x.a,400)/4}%;background:${COL[b]}"></i></div><b>${x.a}</b></div>`}).join("")||`<div class="err">${t.fail}</div>`;
+  $("boardBtn").disabled=false;
+};
+
+renderChips();applyLang();
+try{const qc=new URLSearchParams(location.search).get("city");if(qc){$("city").value=qc.slice(0,60);check()}}catch(e){}
+</script>
+</body>
+</html>
