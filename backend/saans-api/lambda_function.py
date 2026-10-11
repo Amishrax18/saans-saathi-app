@@ -137,6 +137,86 @@ def fallback_advice(aqi, health, lang):
     return "\n".join(f"{i + 1}) {l}" for i, l in enumerate(lines))
 
 
+
+
+# US EPA breakpoints (2012 AQI): (conc_low, conc_high, index_low, index_high)
+US_PM25 = [(0, 12.0, 0, 50), (12.1, 35.4, 51, 100), (35.5, 55.4, 101, 150), (55.5, 150.4, 151, 200),
+           (150.5, 250.4, 201, 300), (250.5, 350.4, 301, 400), (350.5, 500.4, 401, 500)]
+US_PM10 = [(0, 54, 0, 50), (55, 154, 51, 100), (155, 254, 101, 150), (255, 354, 151, 200),
+           (355, 424, 201, 300), (425, 504, 301, 400), (505, 604, 401, 500)]
+
+
+def _us_sub(c, bps):
+    if c is None:
+        return None
+    for lo, hi, ilo, ihi in bps:
+        if c <= hi:
+            return ilo + (max(c, lo) - lo) * (ihi - ilo) / (hi - lo)
+    return 500.0
+
+
+def pm_aqi(pm25, pm10):
+    """US AQI from PM2.5 and PM10 only (max of the two). Open-Meteo's own us_aqi also mixes in gases
+    (NO2, SO2, CO, O3) and can show impossible values like 700+, so we do not use it when PM is available."""
+    vals = [v for v in (_us_sub(pm25, US_PM25), _us_sub(pm10, US_PM10)) if v is not None]
+    return int(round(max(vals))) if vals else None
+
+# Model data can spike in one grid cell (Noida showed AQI 700+ while nearby cells and ground stations said about 140).
+# So we read the point plus 4 neighbours (about 11 km away) in ONE request and use the median of the 5.
+_OFFS = [(0, 0), (0.1, 0), (-0.1, 0), (0, 0.1), (0, -0.1)]
+
+
+def _median(vals):
+    v = sorted(x for x in vals if x is not None)
+    if not v:
+        return None
+    n = len(v)
+    return v[n // 2] if n % 2 else (v[n // 2 - 1] + v[n // 2]) / 2
+
+
+def get_air(lat, lon):
+    base = ("https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}"
+            "&current=us_aqi,pm2_5,pm10&hourly=us_aqi,pm2_5,pm10&forecast_days=3&timezone=Asia%2FKolkata")
+    try:
+        lats = ",".join(str(round(lat + a, 4)) for a, b in _OFFS)
+        lons = ",".join(str(round(lon + b, 4)) for a, b in _OFFS)
+        res = http_json(base.format(lat=lats, lon=lons))
+        if isinstance(res, dict):
+            res = [res]
+        data = res[0]
+        pts = [r.get("current") or {} for r in res]
+        cur = dict(data.get("current") or {})
+        for k in ("us_aqi", "pm2_5", "pm10"):
+            m = _median([p.get(k) for p in pts])
+            if m is not None:
+                cur[k] = int(round(m)) if k == "us_aqi" else round(m, 1)
+        data["current"] = cur
+        # AQI from PM2.5 and PM10 only (see pm_aqi); falls back to the model's us_aqi if PM is missing
+        pa = pm_aqi(cur.get("pm2_5"), cur.get("pm10"))
+        if pa is not None:
+            cur["us_aqi"] = pa
+        data["current"] = cur
+        def series(key):
+            hs = [(r.get("hourly") or {}).get(key) or [] for r in res]
+            n = len(hs[0])
+            if n and all(len(h) == n for h in hs):
+                return [_median([h[i] for h in hs]) for i in range(n)]
+            return None
+        p25, p10, ua = series("pm2_5"), series("pm10"), series("us_aqi")
+        out = None
+        if p25 and p10 and len(p25) == len(p10):
+            out = [pm_aqi(a, b) for a, b in zip(p25, p10)]
+        elif ua:
+            out = [None if v is None else min(int(v), 500) for v in ua]
+        if out:
+            data["hourly"] = dict(data.get("hourly") or {})
+            data["hourly"]["us_aqi"] = out
+        return data
+    except Exception as e:
+        print("Neighbour read failed, using single point:", repr(e))
+        return http_json(base.format(lat=lat, lon=lon))
+
+
 def get_forecast(hourly, today):
     days = {}
     for t, v in zip(hourly.get("time", []), hourly.get("us_aqi", [])):
@@ -338,11 +418,8 @@ def lambda_handler(event, context):
             return resp(404, {"error": "City not found in India: " + city_in})
         lat, lon, city = geo
 
-    url = ("https://air-quality-api.open-meteo.com/v1/air-quality"
-           f"?latitude={lat}&longitude={lon}&current=us_aqi,pm2_5,pm10"
-           "&hourly=us_aqi&forecast_days=3&timezone=Asia%2FKolkata")
     try:
-        data = http_json(url)
+        data = get_air(lat, lon)
     except Exception as e:
         print("Air quality error:", e)
         return resp(502, {"error": "Live air quality data is not available right now. Please try again."})

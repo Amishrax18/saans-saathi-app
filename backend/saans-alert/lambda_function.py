@@ -35,6 +35,31 @@ SCHOOL = {
 }
 
 
+
+# US EPA breakpoints (2012 AQI): (conc_low, conc_high, index_low, index_high)
+US_PM25 = [(0, 12.0, 0, 50), (12.1, 35.4, 51, 100), (35.5, 55.4, 101, 150), (55.5, 150.4, 151, 200),
+           (150.5, 250.4, 201, 300), (250.5, 350.4, 301, 400), (350.5, 500.4, 401, 500)]
+US_PM10 = [(0, 54, 0, 50), (55, 154, 51, 100), (155, 254, 101, 150), (255, 354, 151, 200),
+           (355, 424, 201, 300), (425, 504, 301, 400), (505, 604, 401, 500)]
+
+
+def _us_sub(c, bps):
+    if c is None:
+        return None
+    for lo, hi, ilo, ihi in bps:
+        if c <= hi:
+            return ilo + (max(c, lo) - lo) * (ihi - ilo) / (hi - lo)
+    return 500.0
+
+
+def pm_aqi(pm25, pm10):
+    """US AQI from PM2.5 and PM10 only (max of the two). Open-Meteo's own us_aqi also mixes in gases
+    (NO2, SO2, CO, O3) and can show impossible values like 700+, so we do not use it when PM is available."""
+    vals = [v for v in (_us_sub(pm25, US_PM25), _us_sub(pm10, US_PM10)) if v is not None]
+    return int(round(max(vals))) if vals else None
+
+
+
 def band_index(aqi):
     if aqi <= 50:
         return 0
@@ -55,7 +80,11 @@ def get_current(lat, lon, attempts=2):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=8) as r:
-                return json.loads(r.read().decode("utf-8")).get("current") or {}
+                cur = json.loads(r.read().decode("utf-8")).get("current") or {}
+                pa = pm_aqi(cur.get("pm2_5"), cur.get("pm10"))
+                if pa is not None:
+                    cur["us_aqi"] = pa   # PM-based AQI; the model's own us_aqi can show impossible values
+                return cur
         except Exception as e:
             last_err = e
             time.sleep(1)
