@@ -1,5 +1,9 @@
 import base64
+import csv
+import datetime
+import io
 import json
+import os
 import time
 import uuid
 import urllib.parse
@@ -194,10 +198,129 @@ def tts_reply(p):
         return resp(502, {"error": "voice not available"})
     return resp(200, {"audio": audio, "mime": "audio/mpeg"})
 
+_fires_cache = {"t": 0, "v": None}
+# rough bounding box of Punjab + Haryana (west, south, east, north)
+FIRE_BBOX = "73.8,27.6,77.7,32.6"
+
+
+FIRE_SOURCES = ["VIIRS_SNPP_NRT", "VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT"]
+
+
+def _within_24h(x):
+    """FIRMS day_range is counted in UTC days, so fetch 2 days and keep only detections from the last 24 hours."""
+    try:
+        t = (x.get("acq_time") or "0").zfill(4)
+        when = datetime.datetime.strptime(x["acq_date"] + " " + t, "%Y-%m-%d %H%M")
+        return datetime.datetime.utcnow() - when <= datetime.timedelta(hours=24)
+    except Exception:
+        return False
+
+
+def _firms_rows(key, source, bbox=None, days=2):
+    url = ("https://firms.modaps.eosdis.nasa.gov/api/area/csv/" + key + "/" + source + "/" + (bbox or FIRE_BBOX) + "/" + str(days))
+    req = urllib.request.Request(url, headers={"User-Agent": "SaansSaathi"})
+    with urllib.request.urlopen(req, timeout=15) as r:
+        text = r.read().decode("utf-8")
+    if not text.startswith("latitude"):
+        raise ValueError("unexpected response: " + text[:80])
+    return list(csv.DictReader(io.StringIO(text)))
+
+
+def fires_reply():
+    """NASA FIRMS (VIIRS) fire detections in the last 24 h over Punjab + Haryana (satellite detections of ANY fire).
+    Uses ONE satellite (the one with the most detections) so overpasses of different satellites are not added together."""
+    key = os.environ.get("FIRMS_KEY", "")
+    if not key:
+        return resp(503, {"error": "fire data not configured"})
+    now = time.time()
+    if _fires_cache["v"] is not None and now - _fires_cache["t"] < 1800:
+        return resp(200, _fires_cache["v"])
+    best, by_source, errors = None, {}, []
+    for src in FIRE_SOURCES:
+        try:
+            rows = _firms_rows(key, src)
+        except Exception as e:
+            print("FIRMS error:", src, repr(e))
+            errors.append(src)
+            continue
+        good = [x for x in rows if (x.get("confidence") or "").lower() != "l"       # drop low-confidence
+                and _within_24h(x)]
+        by_source[src] = {"rows": len(rows), "used": len(good)}
+        if best is None or len(good) > len(best[1]):
+            best = (src, good)
+    if best is None:
+        return resp(502, {"error": "fire data not available"})
+    src, good = best
+    latest = max(((x.get("acq_date", ""), x.get("acq_time", "")) for x in good), default=("", ""))
+    out = {"count": len(good), "latest_date": latest[0], "latest_time_utc": latest[1],
+           "region": "Punjab and Haryana (approx.)",
+           "source": "NASA FIRMS, " + src + ", last 24 hours", "by_source": by_source}
+    _fires_cache["t"], _fires_cache["v"] = now, out
+    return resp(200, out)
+
+
+_stats_cache = {"t": 0, "v": None}
+
+
+def stats_reply():
+    """Real counts read from DynamoDB (cached for 60 seconds)."""
+    now = time.time()
+    if _stats_cache["v"] is not None and now - _stats_cache["t"] < 60:
+        return resp(200, _stats_cache["v"])
+    out = {"checks": 0, "telegram_users": 0, "subscribers": 0, "up": 0, "down": 0}
+    kw = {"ProjectionExpression": "checkId, vote"}
+    try:
+        while True:
+            r = table.scan(**kw)
+            for it in r.get("Items", []):
+                k = it.get("checkId", "")
+                if k.startswith("tg#"):
+                    out["telegram_users"] += 1
+                elif k.startswith("sub#"):
+                    out["subscribers"] += 1
+                elif k.startswith("fb#"):
+                    if it.get("vote") == "up":
+                        out["up"] += 1
+                    elif it.get("vote") == "down":
+                        out["down"] += 1
+                elif "#" not in k:
+                    out["checks"] += 1
+            if "LastEvaluatedKey" not in r:
+                break
+            kw["ExclusiveStartKey"] = r["LastEvaluatedKey"]
+    except Exception as e:
+        print("Stats error:", repr(e))
+        return resp(502, {"error": "stats not available"})
+    _stats_cache["t"], _stats_cache["v"] = now, out
+    return resp(200, out)
+
+
+def feedback_reply(p):
+    vote = p.get("fb")
+    if vote not in ("up", "down"):
+        return resp(400, {"error": "bad vote"})
+    try:
+        table.put_item(Item={"checkId": "fb#" + str(uuid.uuid4()), "vote": vote, "source": "web",
+                             "city": (p.get("city") or "")[:60], "ts": int(time.time())})
+    except Exception as e:
+        print("Feedback error:", repr(e))
+        return resp(502, {"error": "could not save"})
+    _stats_cache["v"] = None
+    return resp(200, {"ok": True})
+
+
 def lambda_handler(event, context):
     p = (event or {}).get("queryStringParameters") or {}
     if p.get("tts"):
         return tts_reply(p)
+    if p.get("stats"):
+        return stats_reply()
+    if p.get("fires"):
+        return fires_reply()
+    if p.get("fb"):
+        return feedback_reply(p)
+    brief = p.get("brief") == "1"    # board and comparison: numbers only, no advice, no log
+    nolog = p.get("log") == "0"      # e.g. switching language: do not count as a new check
     city_in = (p.get("city") or "Delhi").strip()[:60]
     role = (p.get("role") or "General").strip()[:60]
     health = (p.get("health") or "Normal").strip()[:60]
@@ -248,6 +371,11 @@ def lambda_handler(event, context):
     else:
         trend = "same"
 
+    if brief:
+        return resp(200, {"city": city, "aqi": aqi, "pm25": pm25, "pm10": pm10,
+                          "cpcb_aqi_approx": cpcb, "grap_stage": grap,
+                          "forecast": forecast, "tomorrow_max": tomorrow, "trend": trend})
+
     advice, source, err = get_advice(city, aqi, pm25, pm10, cpcb, grap, role, health, tomorrow, lang)
 
     check_id = str(uuid.uuid4())
@@ -255,12 +383,15 @@ def lambda_handler(event, context):
             "role": role, "health": health, "aqi": aqi, "advice_source": source}
     if cpcb is not None:
         item["cpcb_aqi"] = cpcb
-    saved = True
-    try:
-        table.put_item(Item=item)
-    except Exception as e:
-        print("DynamoDB error:", e)
-        saved = False
+    saved = False
+    if not nolog:
+        saved = True
+        try:
+            table.put_item(Item=item)
+            _stats_cache["v"] = None
+        except Exception as e:
+            print("DynamoDB error:", e)
+            saved = False
 
     body = {
         "checkId": check_id, "city": city, "aqi": aqi, "pm25": pm25, "pm10": pm10,
