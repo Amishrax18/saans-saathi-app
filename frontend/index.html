@@ -102,6 +102,13 @@ input:focus,select:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(94,234
 .bar .t{height:12px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
 .bar .t i{display:block;height:100%;border-radius:99px}
 .hide{display:none}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{background:rgba(3,10,11,.5);border:1px solid var(--bd);border-radius:16px;padding:14px 16px}
+.stat b{display:block;font-family:var(--fd);font-size:36px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{display:block;margin-top:4px;font-size:12.5px;color:var(--mu);font-weight:700}
+.fbrow{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap;font-size:14px;color:var(--mu);font-weight:600}
+.quote{margin-top:10px;padding:12px 16px;border-left:3px solid var(--ac);background:rgba(255,255,255,.03);border-radius:0 12px 12px 0;font-size:15px;line-height:1.55}
+.quote small{display:block;color:var(--mu);margin-top:3px;font-size:12.5px}
 .err{color:#fca5a5}
 .spin{opacity:.7}
 .awsgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:14px}
@@ -173,6 +180,7 @@ footer{color:var(--mu);font-size:12.5px;text-align:center;margin-top:34px;line-h
       <button class="btn2" id="speak"></button>
       <button class="btn2" id="share"></button>
     </div>
+    <div class="fbrow" id="fbRow"><span id="fbQ"></span><button class="btn2" id="fbUp" aria-label="helpful">👍</button><button class="btn2" id="fbDn" aria-label="not helpful">👎</button></div>
     <div class="note" id="advNote"></div>
   </section>
 
@@ -206,6 +214,24 @@ footer{color:var(--mu);font-size:12.5px;text-align:center;margin-top:34px;line-h
   <div id="board"></div>
 </section>
 
+<section class="card hide" id="fireCard">
+  <div class="lbl" id="lFire"></div>
+  <div class="stats"><div class="stat" style="grid-column:1/-1"><b id="fireN">0</b><span id="fireK"></span></div></div>
+  <div class="note" id="fireNote"></div>
+</section>
+
+<section class="card hide" id="impactCard">
+  <div class="lbl" id="lImpact"></div>
+  <div class="stats">
+    <div class="stat"><b id="sChecks">0</b><span id="kChecks"></span></div>
+    <div class="stat"><b id="sTg">0</b><span id="kTg"></span></div>
+    <div class="stat"><b id="sSub">0</b><span id="kSub"></span></div>
+    <div class="stat"><b id="sFb">0</b><span id="kFb"></span></div>
+  </div>
+  <div class="note" id="impNote"></div>
+  <div id="quotes"></div>
+</section>
+
 <section class="card">
   <div class="lbl" id="lTg"></div>
   <div class="adv" style="font-size:16px" id="tgText"></div>
@@ -227,10 +253,10 @@ footer{color:var(--mu);font-size:12.5px;text-align:center;margin-top:34px;line-h
 const API="https://9p18wspqok.execute-api.ap-south-1.amazonaws.com/check";
 let lang="en";
 const T={
-en:{sub:"Live air quality and health advice for people who work outdoors",city:"City",role:"Who are you",health:"Health condition",go:"Get health advice",loc:"📍 Use my location",locOk:"Nearest city: ",locNo:"Location not available",
+en:{sub:"Live air quality and health advice for people who work outdoors",city:"City",role:"Who are you",health:"Health condition",go:"Get health advice",loc:"📍 Use my location",locOk:"Using your exact location",locNo:"Location not available",
 aqi:"Current AQI (US scale)",poll:"Pollutants and GRAP",cpcb:"CPCB AQI (approx.)",safe:"How long can you stay outside?",mask:"Mask",best:"Best time outside",adv:"Health advice",
 fc:"Coming days",tomorrow:"Tomorrow",dayafter:"Day after",school:"School Mode (for teachers and parents)",kSch:"Suggested decision",board:"Live AQI board: big cities",boardBtn:"Show live board",
-headline:"Know your air <em>before you step out.</em>",tr1:"Any city in India",tr2:"Hindi and English",tr3:"Free, no sign-up",aws:[["AWS Amplify","Hosts this website"],["API Gateway","Public front door for every request"],["Lambda","Air checks, Telegram bot and alerts"],["DynamoDB","Saves checks, preferences and feedback"],["EventBridge","Hourly and 7:30 AM schedules"],["SNS","School alert emails"],["Polly","Voice replies in Telegram"]],live:"Live data, just now",lTg:"Also on Telegram",tgText:"Chat with the bot: send any city or your location, get advice, a voice note, a tomorrow warning and hourly alerts for your city.",tgBtn:"Open @SaansSaathi_bot",lAws:"Built on AWS",awsText:"Every check runs through API Gateway and Lambda, is logged in DynamoDB, and school alerts run hourly with EventBridge and SNS. The Telegram bot talks in voice with Amazon Polly.",speak:"🔊 Listen",stop:"⏹ Stop",share:"Share on WhatsApp",loading:"Checking air...",noCity:"City not found. Try another name.",fail:"Could not reach server. Please try again.",
+headline:"Know your air <em>before you step out.</em>",tr1:"Any city in India",tr2:"Hindi and English",tr3:"Free, no sign-up",aws:[["AWS Amplify","Hosts this website"],["API Gateway","Public front door for every request"],["Lambda","Air checks, Telegram bot and alerts"],["DynamoDB","Saves checks, preferences and feedback"],["EventBridge","Hourly and 7:30 AM schedules"],["SNS","School alert emails"],["Polly","Female voice on the website and in Telegram"]],live:"Live data, just now",lTg:"Also on Telegram",tgText:"Chat with the bot: send any city or your location, get advice, a voice note, a tomorrow warning and hourly alerts for your city.",tgBtn:"Open @SaansSaathi_bot",lAws:"Built on AWS",awsText:"Every check runs through API Gateway and Lambda, is logged in DynamoDB, and school alerts run hourly with EventBridge and SNS. Amazon Polly gives the voice on the website and in the Telegram bot.",speak:"🔊 Listen",lFire:"Stubble fire watch (NASA satellite)",fireK:"fire detections in Punjab and Haryana in the last 24 hours",fireNote:"Satellite detections of any fire in this region (low-confidence ones removed), not a measured share of today's AQI. Crop-residue burning in Oct-Nov is one source that can add smoke to Delhi-NCR. Latest detection: ",fireSrc:"Source: NASA FIRMS (VIIRS).",lImpact:"Impact so far (live from our database)",kChecks:"Air checks",kTg:"Telegram users",kSub:"People with alerts on",kFb:"Found it helpful",impNote:"Real counts read live from DynamoDB. They include our own test checks.",quotesT:"What real users said",fbQ:"Was this advice helpful?",fbThanks:"Thank you for your feedback!",locName:"Your location",stop:"⏹ Stop",share:"Share on WhatsApp",loading:"Checking air...",noCity:"City not found. Try another name.",fail:"Could not reach server. Please try again.",
 bands:["Good","Moderate","Unhealthy for sensitive","Unhealthy","Very unhealthy","Hazardous"],
 spike:"PM10 is extremely high. This may be a dust spike or a bad sensor reading. Be careful, but double-check with another source.",
 trendS:"Air will be about the same tomorrow.",trendW:"Warning: air will get worse tomorrow. Plan outdoor work early.",trendB:"Good news: air should improve tomorrow.",
@@ -246,10 +272,10 @@ shareT:(c,a,b)=>`Air in ${c} right now: AQI ${a} (${b}). Check your own advice o
 foot:(b)=>`Live data: Open-Meteo${b?". AI advice: Amazon Bedrock":""}. Advisory only, not an official government order.`,
 roles:["General","Delivery rider","Street vendor","School teacher","Parent","Traffic police","Construction worker"],
 healths:["Normal","Asthma / breathing problem","Elderly","Child","Pregnant"]},
-hi:{sub:"बाहर काम करने वालों के लिए लाइव हवा की जानकारी और सेहत की सलाह",city:"शहर",role:"आप कौन हैं",health:"सेहत की स्थिति",go:"सलाह लें",loc:"📍 मेरी लोकेशन",locOk:"सबसे पास का शहर: ",locNo:"लोकेशन नहीं मिली",
+hi:{sub:"बाहर काम करने वालों के लिए लाइव हवा की जानकारी और सेहत की सलाह",city:"शहर",role:"आप कौन हैं",health:"सेहत की स्थिति",go:"सलाह लें",loc:"📍 मेरी लोकेशन",locOk:"आपकी सटीक लोकेशन इस्तेमाल हो रही है",locNo:"लोकेशन नहीं मिली",
 aqi:"अभी का AQI (US स्केल)",poll:"प्रदूषक और GRAP",cpcb:"CPCB AQI (अंदाज़न)",safe:"बाहर कितनी देर रह सकते हैं?",mask:"मास्क",best:"बाहर जाने का सही समय",adv:"सेहत की सलाह",
 fc:"आने वाले दिन",tomorrow:"कल",dayafter:"परसों",school:"स्कूल मोड (शिक्षक और अभिभावक के लिए)",kSch:"सुझाया गया फैसला",board:"लाइव AQI बोर्ड: बड़े शहर",boardBtn:"लाइव बोर्ड देखें",
-headline:"बाहर निकलने से पहले <em>हवा जानें।</em>",tr1:"भारत का कोई भी शहर",tr2:"हिंदी और English",tr3:"मुफ़्त, साइन-अप नहीं",aws:[["AWS Amplify","यह वेबसाइट होस्ट करता है"],["API Gateway","हर रिक्वेस्ट का सार्वजनिक दरवाज़ा"],["Lambda","हवा की जाँच, Telegram बॉट और अलर्ट"],["DynamoDB","जाँच, पसंद और फीडबैक सहेजता है"],["EventBridge","हर घंटे और सुबह 7:30 के शेड्यूल"],["SNS","स्कूल अलर्ट ईमेल"],["Polly","Telegram में आवाज़ वाले जवाब"]],live:"लाइव डेटा, अभी",lTg:"Telegram पर भी",tgText:"बॉट से बात करें: कोई भी शहर या अपनी लोकेशन भेजें, सलाह, आवाज़ वाला संदेश, कल की चेतावनी और अपने शहर के घंटे-घंटे के अलर्ट पाएँ।",tgBtn:"@SaansSaathi_bot खोलें",lAws:"AWS पर बना",awsText:"हर जाँच API Gateway और Lambda से गुज़रती है, DynamoDB में दर्ज होती है, और स्कूल अलर्ट EventBridge और SNS से हर घंटे चलते हैं। Telegram बॉट Amazon Polly से आवाज़ में बोलता है।",speak:"🔊 सुनें",stop:"⏹ रोकें",share:"WhatsApp पर भेजें",loading:"हवा चेक हो रही है...",noCity:"शहर नहीं मिला। दूसरा नाम आज़माएं।",fail:"सर्वर नहीं मिला। फिर कोशिश करें।",
+headline:"बाहर निकलने से पहले <em>हवा जानें।</em>",tr1:"भारत का कोई भी शहर",tr2:"हिंदी और English",tr3:"मुफ़्त, साइन-अप नहीं",aws:[["AWS Amplify","यह वेबसाइट होस्ट करता है"],["API Gateway","हर रिक्वेस्ट का सार्वजनिक दरवाज़ा"],["Lambda","हवा की जाँच, Telegram बॉट और अलर्ट"],["DynamoDB","जाँच, पसंद और फीडबैक सहेजता है"],["EventBridge","हर घंटे और सुबह 7:30 के शेड्यूल"],["SNS","स्कूल अलर्ट ईमेल"],["Polly","वेबसाइट और Telegram में महिला आवाज़"]],live:"लाइव डेटा, अभी",lTg:"Telegram पर भी",tgText:"बॉट से बात करें: कोई भी शहर या अपनी लोकेशन भेजें, सलाह, आवाज़ वाला संदेश, कल की चेतावनी और अपने शहर के घंटे-घंटे के अलर्ट पाएँ।",tgBtn:"@SaansSaathi_bot खोलें",lAws:"AWS पर बना",awsText:"हर जाँच API Gateway और Lambda से गुज़रती है, DynamoDB में दर्ज होती है, और स्कूल अलर्ट EventBridge और SNS से हर घंटे चलते हैं। वेबसाइट और Telegram बॉट की आवाज़ Amazon Polly से आती है।",speak:"🔊 सुनें",lFire:"पराली आग की निगरानी (NASA सैटेलाइट)",fireK:"पिछले 24 घंटे में पंजाब और हरियाणा में आग की पहचान",fireNote:"इस इलाके में किसी भी आग की सैटेलाइट पहचान (कम भरोसे वाली हटा दी गई हैं), आज के AQI में इसका हिस्सा नहीं। अक्टूबर-नवंबर में पराली जलाना एक ऐसा स्रोत है जो दिल्ली-NCR में धुआँ बढ़ा सकता है। आख़िरी पहचान: ",fireSrc:"स्रोत: NASA FIRMS (VIIRS)।",lImpact:"अब तक का असर (हमारे डेटाबेस से लाइव)",kChecks:"हवा की जाँच",kTg:"Telegram यूज़र",kSub:"अलर्ट चालू वाले लोग",kFb:"काम की लगी",impNote:"असली गिनती, सीधे DynamoDB से। इसमें हमारी अपनी टेस्ट जाँच भी शामिल हैं।",quotesT:"असली यूज़र्स ने क्या कहा",fbQ:"क्या यह सलाह काम की थी?",fbThanks:"फीडबैक के लिए धन्यवाद!",locName:"आपकी लोकेशन",stop:"⏹ रोकें",share:"WhatsApp पर भेजें",loading:"हवा चेक हो रही है...",noCity:"शहर नहीं मिला। दूसरा नाम आज़माएं।",fail:"सर्वर नहीं मिला। फिर कोशिश करें।",
 bands:["अच्छी","सामान्य","संवेदनशील लोगों के लिए खराब","खराब","बहुत खराब","खतरनाक"],
 spike:"PM10 बहुत ज़्यादा है। यह धूल का उछाल या गलत रीडिंग हो सकती है। सावधान रहें और दूसरी जगह भी जाँच लें।",
 trendS:"कल हवा लगभग ऐसी ही रहेगी।",trendW:"चेतावनी: कल हवा और खराब होगी। बाहर का काम सुबह जल्दी निपटा लें।",trendB:"अच्छी खबर: कल हवा बेहतर हो सकती है।",
@@ -317,12 +343,13 @@ function applyLang(){
   $("bEn").classList.toggle("on",lang==="en");$("bHi").classList.toggle("on",lang==="hi");
   fillSelects();$("foot").textContent=t.foot(last&&last.advice_source==="bedrock");
   if(last)render(last);
+  renderStats();renderFires();
 }
-$("bEn").onclick=()=>{if(lang==="en")return;stopVoice();lang="en";applyLang();if(last)check(true)};
-$("bHi").onclick=()=>{if(lang==="hi")return;stopVoice();lang="hi";applyLang();if(last)check(true)};
+$("bEn").onclick=()=>{if(lang==="en")return;stopVoice();lang="en";applyLang();if(last)check(true,true)};
+$("bHi").onclick=()=>{if(lang==="hi")return;stopVoice();lang="hi";applyLang();if(last)check(true,true)};
 
 function renderChips(){
-  $("chips").innerHTML=CITIES.slice(0,16).map(c=>`<button class="chip" data-c="${c[0]}">${c[0]}</button>`).join("");
+  $("chips").innerHTML=CITIES.map(c=>`<button class="chip" data-c="${c[0]}">${c[0]}</button>`).join("");
   $("chips").onclick=e=>{const c=e.target.dataset.c;if(c){$("city").value=c;check()}};
 }
 
@@ -351,31 +378,31 @@ $("city").addEventListener("input",()=>{
   },250);
 });
 $("sug").onclick=e=>{const d=e.target.closest("div[data-i]");if(d){const x=window._sug[+d.dataset.i];$("city").value=x.name;picked={lat:x.latitude,lon:x.longitude,name:x.name};$("sug").style.display="none";check()}};
-document.addEventListener("click",e=>{if(!e.target.closest(".srch"))$("sug").style.display="none"});
+document.addEventListener("click",e=>{if(!e.target.closest(".sbox"))$("sug").style.display="none"});
 $("city").addEventListener("keydown",e=>{if(e.key==="Enter"){$("sug").style.display="none";check()}});
 
 $("loc").onclick=()=>{
   const t=T[lang];
   if(!navigator.geolocation){$("locNote").textContent=t.locNo;return}
   navigator.geolocation.getCurrentPosition(p=>{
-    let best=null,bd=1e9;
-    for(const c of CITIES){const d=(c[1]-p.coords.latitude)**2+(c[2]-p.coords.longitude)**2;if(d<bd){bd=d;best=c[0]}}
-    $("city").value=best;picked=null;$("locNote").textContent=t.locOk+best;check();
+    const nm=t.locName;
+    picked={lat:+p.coords.latitude.toFixed(4),lon:+p.coords.longitude.toFixed(4),name:nm};
+    $("city").value=nm;$("locNote").textContent=t.locOk;check();
   },()=>{$("locNote").textContent=t.locNo},{timeout:8000});
 };
 
-async function api(city){
+async function api(city,extra){
   const ll=(picked&&picked.name===city)?`&lat=${picked.lat}&lon=${picked.lon}`:"";
-  const u=`${API}?city=${encodeURIComponent(city)}${ll}&role=${encodeURIComponent($("role").value)}&health=${encodeURIComponent($("health").value)}&lang=${lang}`;
+  const u=`${API}?city=${encodeURIComponent(city)}${ll}&role=${encodeURIComponent($("role").value)}&health=${encodeURIComponent($("health").value)}&lang=${lang}${extra||""}`;
   const r=await fetch(u);const j=await r.json().catch(()=>({}));
   if(!r.ok){const e=new Error(j.error||"fail");e.status=r.status;throw e}
   return j;
 }
-async function check(quiet){
+async function check(quiet,nolog){
   const t=T[lang];const city=$("city").value.trim();if(!city)return;
   $("go").disabled=true;$("go").textContent=t.loading;
   try{
-    const j=await api(city);last=j;render(j);$("out").classList.remove("hide");
+    const j=await api(city,nolog?"&log=0":"");last=j;render(j);$("out").classList.remove("hide");
     if(!quiet)$("out").scrollIntoView({behavior:"smooth",block:"start"});
   }catch(e){
     alert(e.status===404?t.noCity:t.fail);
@@ -422,6 +449,7 @@ function render(j){
   const sc=j.aqi<=100?"a":j.aqi<=150?"b":j.aqi<=200?"c":"d";
   $("schDec").textContent=t.schD[sc];$("schMsg").textContent=t.schM[sc];
   $("foot").textContent=t.foot(isAI);
+  showFb();
 }
 
 // voice: browser speech (Hindi if available). Polly can replace this later.
@@ -476,13 +504,42 @@ $("share").onclick=()=>{
 
 $("boardBtn").onclick=async()=>{
   const t=T[lang];$("boardBtn").disabled=true;$("board").innerHTML=`<div class="note spin">${t.loading}</div>`;
-  const rs=await Promise.all(BOARD.map(c=>api(c).then(j=>({c,a:j.aqi})).catch(()=>null)));
+  const rs=await Promise.all(BOARD.map(c=>api(c,"&brief=1").then(j=>({c,a:j.aqi})).catch(()=>null)));
   const ok=rs.filter(Boolean).sort((a,b)=>b.a-a.a);
   $("board").innerHTML=ok.map(x=>{const b=bandIdx(x.a);return `<div class="bar"><span>${x.c}</span><div class="t"><i style="width:${Math.min(x.a,400)/4}%;background:${COL[b]}"></i></div><b>${x.a}</b></div>`}).join("")||`<div class="err">${t.fail}</div>`;
   $("boardBtn").disabled=false;
 };
 
-renderChips();applyLang();
+let stats=null,votedId=null,fires=null;
+async function loadFires(){try{const r=await fetch(API+"?fires=1");if(!r.ok)return;fires=await r.json();renderFires()}catch(e){}}
+function renderFires(){
+  if(!fires||fires.count==null)return;const t=T[lang];
+  $("fireCard").classList.remove("hide");$("lFire").textContent=t.lFire;$("fireN").textContent=fires.count;$("fireK").textContent=t.fireK;
+  const tm=(fires.latest_time_utc||"").padStart(4,"0");
+  $("fireNote").textContent=t.fireNote+(fires.latest_date?fires.latest_date+" "+tm.slice(0,2)+":"+tm.slice(2)+" UTC. ":"")+t.fireSrc;
+}
+async function loadStats(){try{const r=await fetch(API+"?stats=1");if(!r.ok)return;stats=await r.json();renderStats()}catch(e){}}
+function renderStats(){
+  if(!stats)return;const t=T[lang];
+  $("impactCard").classList.remove("hide");
+  $("lImpact").textContent=t.lImpact;$("kChecks").textContent=t.kChecks;$("kTg").textContent=t.kTg;$("kSub").textContent=t.kSub;$("kFb").textContent=t.kFb;$("impNote").textContent=t.impNote;
+  $("sChecks").textContent=stats.checks;$("sTg").textContent=stats.telegram_users;$("sSub").textContent=stats.subscribers;
+  $("sFb").textContent=(stats.up+stats.down)?Math.round(100*stats.up/(stats.up+stats.down))+"% ("+stats.up+"/"+(stats.up+stats.down)+")":"-";
+  $("quotes").innerHTML=QUOTES.length?`<div class="lbl" style="margin:16px 0 0">${t.quotesT}</div>`+QUOTES.map(q=>`<div class="quote">${q[lang]||q.en}<small>${q.who}</small></div>`).join(""):"";
+}
+// Add REAL one-line feedback here (only things people actually told you). Example:
+// {en:"Now I know when to take my delivery break.", hi:"अब पता है कब ब्रेक लेना है।", who:"Delivery rider, Noida"}
+const QUOTES=[];
+function showFb(){
+  const t=T[lang];$("fbQ").textContent=(last&&votedId===last.checkId)?t.fbThanks:t.fbQ;
+  const done=last&&votedId===last.checkId;$("fbUp").classList.toggle("hide",done);$("fbDn").classList.toggle("hide",done);
+}
+async function vote(v){
+  if(!last)return;votedId=last.checkId;showFb();
+  try{await fetch(`${API}?fb=${v}&city=${encodeURIComponent(last.city)}`);loadStats()}catch(e){}
+}
+$("fbUp").onclick=()=>vote("up");$("fbDn").onclick=()=>vote("down");
+renderChips();applyLang();loadStats();loadFires();
 try{const qc=new URLSearchParams(location.search).get("city");if(qc){$("city").value=qc.slice(0,60);check()}}catch(e){}
 </script>
 </body>
