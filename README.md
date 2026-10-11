@@ -20,14 +20,7 @@ Air apps show a number (AQI) but not what to do. A rider in Delhi still has to g
 - Impact numbers and a Punjab/Haryana fire card (NASA FIRMS satellite detections).
 
 ## Architecture (all in ap-south-1, Mumbai)
-```
-Browser (Amplify) --> API Gateway HTTP API --> Lambda saans-api --> Open-Meteo
-                                                    |--> DynamoDB (checks, state)
-                                                    |--> Amazon Polly (voice)
-Telegram --> API Gateway POST /telegram --> Lambda saans-telegram
-EventBridge Scheduler (hourly, 7:30 AM IST) --> Lambda saans-alert --> SNS email + Telegram
-Step Functions (Map over 104 cities) --> Lambda saans-school-summary --> SNS email
-```
+![Saans Saathi architecture](docs/architecture.png)
 
 ## AWS services used
 Amplify Hosting, API Gateway (HTTP API), Lambda (Python 3.12), DynamoDB, EventBridge Scheduler, SNS, Amazon Polly, Step Functions, CloudWatch.
