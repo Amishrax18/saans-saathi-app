@@ -1,11 +1,15 @@
 import json
+import os
 import time
+import urllib.error
+import urllib.parse
 import urllib.request
 
 import boto3
 
 REGION = "ap-south-1"
-TOPIC_ARN =  "arn:aws:sns:ap-south-1:856447616153:Saans-School-Alerts"
+TOPIC_ARN = "arn:aws:sns:ap-south-1:856447616153:Saans-School-Alerts"
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 ALERT_FROM_BAND = 3  # band 3 = US AQI above 150 (Unhealthy)
 
 CITIES = {"Delhi": (28.61, 77.21), "Noida": (28.57, 77.32),
@@ -43,51 +47,195 @@ def band_index(aqi):
     return 4
 
 
-def get_current(lat, lon, tries=3):
-    """Fetch current air quality. Retries on timeouts / SSL errors."""
+def get_current(lat, lon, attempts=2):
     url = ("https://air-quality-api.open-meteo.com/v1/air-quality"
            f"?latitude={lat}&longitude={lon}&current=us_aqi,pm2_5,pm10")
     last_err = None
-    for attempt in range(tries):
+    for _ in range(attempts):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=6) as r:
+            with urllib.request.urlopen(req, timeout=8) as r:
                 return json.loads(r.read().decode("utf-8")).get("current") or {}
         except Exception as e:
             last_err = e
-            print("Air quality retry", attempt + 1, e)
-            time.sleep(1.5 * (attempt + 1))
+            time.sleep(1)
     raise last_err
 
 
-def read_state(city):
-    """Returns (last_reading_band, confirmed_band). Old items only had 'band' = confirmed."""
+def read_state(city, prefix="state#"):
+    """Returns (last_band, confirmed_band). Old items only had "band"; treat it as confirmed."""
     try:
-        item = table.get_item(Key={"checkId": "state#" + city}).get("Item")
+        item = table.get_item(Key={"checkId": prefix + city}).get("Item")
+        if not item:
+            return None, None
+        old = item.get("band")
+        last = item.get("last_band", old)
+        conf = item.get("confirmed_band", old)
+        return (int(last) if last is not None else None,
+                int(conf) if conf is not None else None)
     except Exception as e:
         print("State read error:", e)
         return None, None
-    if not item:
-        return None, None
-    confirmed = item.get("confirmed", item.get("band"))
-    reading = item.get("reading")
-    return (int(reading) if reading is not None else None,
-            int(confirmed) if confirmed is not None else None)
 
 
-def write_state(city, reading, confirmed):
+def save_state(city, last_band, confirmed_band, prefix="state#"):
+    item = {"checkId": prefix + city, "last_band": last_band,
+            "timestamp": int(time.time())}
+    if confirmed_band is not None:
+        item["confirmed_band"] = confirmed_band
     try:
-        item = {"checkId": "state#" + city, "reading": reading,
-                "timestamp": int(time.time())}
-        if confirmed is not None:
-            item["confirmed"] = confirmed
         table.put_item(Item=item)
     except Exception as e:
         print("State write error:", e)
 
 
+# ---------------- Telegram subscribers ----------------
+BAND_NAME = {
+    "en": ["Good", "Moderate", "Unhealthy for sensitive people", "Unhealthy", "Very unhealthy"],
+    "hi": ["अच्छी", "सामान्य", "संवेदनशील लोगों के लिए खराब", "खराब", "बहुत खराब"],
+}
+TG_ADVICE = {
+    0: ("Safe to be outside today.", "आज बाहर रहना सुरक्षित है।"),
+    1: ("Fine for most people. Sensitive people should watch for symptoms.",
+        "ज़्यादातर लोगों के लिए ठीक है। संवेदनशील लोग लक्षणों पर नज़र रखें।"),
+    2: ("Limit long outdoor work. Wear a mask if you are sensitive.",
+        "लंबा बाहरी काम कम करें। संवेदनशील लोग मास्क पहनें।"),
+    3: ("Reduce outdoor work, rest often and wear an N95 mask.",
+        "बाहर का काम कम करें, बार-बार आराम लें और N95 मास्क पहनें।"),
+    4: ("Stay indoors if you can. If you must go out, wear a well-fitted N95 mask.",
+        "हो सके तो घर के अंदर रहें। बाहर जाना पड़े तो ठीक से फिट N95 मास्क पहनें।"),
+}
+SENSITIVE = {"en": "You are at higher risk, so be extra careful.",
+             "hi": "आपके लिए ख़तरा ज़्यादा है, और सावधान रहें।"}
+FOOT = {"en": "Advisory only, not an official government order. Send /alerts to stop.",
+        "hi": "यह सिर्फ सलाह है, सरकारी आदेश नहीं। बंद करने के लिए /alerts भेजें।"}
+_geo_cache = {}
+
+
+def tg_send(chat_id, text):
+    """Returns True if sent, "gone" if the user blocked the bot, False otherwise."""
+    if not BOT_TOKEN:
+        print("BOT_TOKEN missing")
+        return False
+    req = urllib.request.Request(
+        f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+        data=json.dumps({"chat_id": chat_id, "text": text[:4000]}).encode("utf-8"),
+        headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=10):
+            return True
+    except urllib.error.HTTPError as e:
+        print("Telegram HTTP error:", e.code)
+        return "gone" if e.code == 403 else False
+    except Exception as e:
+        print("Telegram error:", e)
+        return False
+
+
+def list_subs():
+    items, kw = [], {"FilterExpression": "begins_with(checkId, :p)",
+                     "ExpressionAttributeValues": {":p": "sub#"}}
+    while True:
+        r = table.scan(**kw)
+        items += r.get("Items", [])
+        if "LastEvaluatedKey" not in r:
+            break
+        kw["ExclusiveStartKey"] = r["LastEvaluatedKey"]
+    return items
+
+
+def sub_coords(sub):
+    if sub.get("lat") is not None and sub.get("lon") is not None:
+        return float(sub["lat"]), float(sub["lon"]), f"{float(sub['lat']):.2f},{float(sub['lon']):.2f}"
+    city = sub.get("city", "")
+    if city not in _geo_cache:
+        url = ("https://geocoding-api.open-meteo.com/v1/search?name=" + urllib.parse.quote(city)
+               + "&count=1&language=en&format=json&countryCode=IN")
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=8) as r:
+                res = (json.loads(r.read().decode("utf-8")).get("results") or [None])[0]
+            _geo_cache[city] = (res["latitude"], res["longitude"]) if res else None
+        except Exception as e:
+            print("Geocode error:", city, e)
+            _geo_cache[city] = None
+    g = _geo_cache[city]
+    return (g[0], g[1], city) if g else None
+
+
+def tg_text(city, aqi, pm25, band, sub, morning):
+    lang = "en" if sub.get("lang") == "en" else "hi"
+    en, hi = TG_ADVICE[band]
+    advice = en if lang == "en" else hi
+    head = ("Good morning! Air in " if lang == "en" else "सुप्रभात! हवा, ") if morning else ""
+    if lang == "en":
+        title = (f"{head}{city}: AQI {aqi} ({BAND_NAME['en'][band]})" if morning
+                 else f"⚠️ Air in {city} is now {BAND_NAME['en'][band]} (AQI {aqi}).")
+    else:
+        title = (f"{head}{city}: AQI {aqi} ({BAND_NAME['hi'][band]})" if morning
+                 else f"⚠️ {city} में हवा अब {BAND_NAME['hi'][band]} है (AQI {aqi})।")
+    lines = [title, f"PM2.5: {pm25}", advice]
+    if sub.get("health", "Normal") != "Normal" and band >= 2:
+        lines.append(SENSITIVE[lang])
+    lines.append(FOOT[lang])
+    return "\n".join(lines)
+
+
+def telegram_run(morning=False, force=False):
+    """Message Telegram subscribers: on a confirmed jump to Unhealthy, or a morning update."""
+    out = {"subscribers": 0, "sent": 0, "cities": 0}
+    if not BOT_TOKEN:
+        out["error"] = "BOT_TOKEN missing"
+        return out
+    subs = list_subs()
+    out["subscribers"] = len(subs)
+    groups = {}
+    for sub in subs:
+        c = sub_coords(sub)
+        if c:
+            groups.setdefault(c[2], (c[0], c[1], []))[2].append(sub)
+    out["cities"] = len(groups)
+    for key, (lat, lon, members) in groups.items():
+        try:
+            cur = get_current(lat, lon)
+        except Exception as e:
+            print("Air quality error:", key, e)
+            continue
+        if cur.get("us_aqi") is None:
+            continue
+        aqi = int(cur["us_aqi"])
+        band = band_index(aqi)
+        send_now = morning
+        if not morning:
+            prev_last, prev_conf = read_state(key, "tgstate#")
+            new_conf = band if band == prev_last else prev_conf
+            newly = new_conf == band and new_conf != prev_conf
+            save_state(key, band, new_conf, "tgstate#")
+            send_now = force or (band >= ALERT_FROM_BAND and newly)
+        if not send_now:
+            continue
+        for sub in members:
+            name = sub.get("city") if sub.get("city") != "Your location" else (
+                "आपकी लोकेशन" if sub.get("lang") != "en" else "your location")
+            ok = tg_send(sub["chat_id"], tg_text(name, aqi, cur.get("pm2_5"), band, sub, morning))
+            if ok is True:
+                out["sent"] += 1
+            elif ok == "gone":
+                try:
+                    table.delete_item(Key={"checkId": sub["checkId"]})
+                except Exception as e:
+                    print("Unsub error:", e)
+    return out
+
+
 def lambda_handler(event, context):
     event = event or {}
+    if event.get("morning"):
+        try:
+            return {"statusCode": 200, "body": json.dumps({"telegram": telegram_run(morning=True)}, ensure_ascii=False)}
+        except Exception as e:
+            print("Morning error:", e)
+            return {"statusCode": 500, "body": json.dumps({"error": str(e)[:200]})}
     force = bool(event.get("force"))
     cities = event.get("cities") or list(CITIES)
     results, alerts = [], []
@@ -108,32 +256,28 @@ def lambda_handler(event, context):
 
         aqi = int(cur["us_aqi"])
         band = band_index(aqi)
-
-        # Very high PM10 with moderate PM2.5 is usually a dust spike or bad model data
-        # (we saw Noida at AQI ~490 this way). Do not alert on it and do not store it.
-        pm25, pm10 = cur.get("pm2_5"), cur.get("pm10")
-        if pm10 is not None and pm10 > 600 and (pm25 is None or pm25 < 250):
-            results.append({"city": city, "aqi": aqi, "pm10": pm10, "pm2_5": pm25,
-                            "alert": False, "suspect_data": True})
-            continue
-        prev_reading, prev_confirmed = read_state(city)
-
-        # A band counts as real only when two hourly checks in a row agree.
-        # This stops one-off glitches (like a single AQI 498) from sending alerts.
-        confirmed = prev_confirmed
-        if prev_reading is not None and band == prev_reading:
-            confirmed = band
-        changed = confirmed != prev_confirmed
-        send = force or (changed and confirmed is not None and confirmed >= ALERT_FROM_BAND)
-        write_state(city, band, confirmed)
+        prev_last, prev_conf = read_state(city)
+        # A band counts as confirmed only after two readings in a row, so one
+        # bad data point cannot trigger an alert.
+        new_conf = band if band == prev_last else prev_conf
+        newly_confirmed = new_conf == band and new_conf != prev_conf
+        send = force or (band >= ALERT_FROM_BAND and newly_confirmed)
+        save_state(city, band, new_conf)
+        prev = prev_conf
 
         en, hi = SCHOOL[band]
         results.append({"city": city, "aqi": aqi, "band": band,
-                        "previous_reading": prev_reading,
-                        "confirmed_band": confirmed, "alert": send, "school_en": en})
+                        "previous_band": prev, "alert": send, "school_en": en})
         if send:
             alerts.append(f"{city}: AQI {aqi} (PM2.5 {cur.get('pm2_5')})\n"
                           f"School advice: {en}\nस्कूल सलाह: {hi}")
+
+    tg_result = None
+    try:
+        tg_result = telegram_run(force=bool(event.get("force_telegram")))
+    except Exception as e:
+        print("Telegram run error:", e)
+        tg_result = {"error": str(e)[:200]}
 
     published = False
     if alerts:
@@ -152,4 +296,5 @@ def lambda_handler(event, context):
                                         "results": results}, ensure_ascii=False)}
 
     return {"statusCode": 200,
-            "body": json.dumps({"published": published, "results": results}, ensure_ascii=False)}
+            "body": json.dumps({"published": published, "results": results,
+                                "telegram": tg_result}, ensure_ascii=False)}
